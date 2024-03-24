@@ -4,22 +4,22 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url     = env("DATABASE_URL")
+  url      = env("DATABASE_URL")
 }
 
 model Account {
-  id                 String  @id @default(cuid())
-  userId             String
-  type               String
-  provider           String
-  providerAccountId  String
-  refresh_token      String?  @db.Text
-  access_token       String?  @db.Text
-  expires_at         Int?
-  token_type         String?
-  scope              String?
-  id_token           String?  @db.Text
-  session_state      String?
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -34,4 +34,30 @@ model User {
   passwordHash  String
   image         String?
   accounts      Account[]
+  member        Member?
+}
+
+model Member {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  name        String
+  gender      String
+  dateOfBirth DateTime
+  created     DateTime @default(now())
+  updated     DateTime @default(now())
+  description String
+  city        String
+  country     String
+  image       String?
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  photos      Photo[]
+}
+
+model Photo {
+  id       String  @id @default(cuid())
+  url      String
+  publicId String?
+
+  memberId String
+  member   Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
 }
