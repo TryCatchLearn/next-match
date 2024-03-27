@@ -5,9 +5,11 @@ import { GiMatchTip } from 'react-icons/gi'
 import NavLink from './NavLink'
 import { auth } from '@/auth'
 import UserMenu from './UserMenu'
+import { getUserInfoForNav } from '@/app/actions/userActions'
 
 export default async function TopNav() {
     const session = await auth();
+    const userInfo = session?.user && await getUserInfoForNav()
     return (
         <Navbar
             maxWidth='xl'
@@ -34,15 +36,14 @@ export default async function TopNav() {
                 <NavLink href='/messages' label='Messages' />
             </NavbarContent>
             <NavbarContent justify='end'>
-                {session?.user ? (
-                    <UserMenu user={session.user} />
+                {userInfo ? (
+                    <UserMenu userInfo={userInfo} />
                 ) : (
                     <>
                         <Button as={Link} href='/login' variant='bordered' className='text-white'>Login</Button>
                         <Button as={Link} href='/register' variant='bordered' className='text-white'>Register</Button>
                     </>
                 )}
-
             </NavbarContent>
         </Navbar>
     )
