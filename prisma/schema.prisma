@@ -38,21 +38,23 @@ model User {
 }
 
 model Member {
-  id          String   @id @default(cuid())
-  userId      String   @unique
-  name        String
-  gender      String
-  dateOfBirth DateTime
-  created     DateTime @default(now())
-  updated     DateTime @default(now())
-  description String
-  city        String
-  country     String
-  image       String?
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  photos      Photo[]
-  sourceLikes Like[]   @relation("source")
-  targetLikes Like[]   @relation("target")
+  id                String    @id @default(cuid())
+  userId            String    @unique
+  name              String
+  gender            String
+  dateOfBirth       DateTime
+  created           DateTime  @default(now())
+  updated           DateTime  @default(now())
+  description       String
+  city              String
+  country           String
+  image             String?
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  photos            Photo[]
+  sourceLikes       Like[]    @relation("source")
+  targetLikes       Like[]    @relation("target")
+  senderMessages    Message[] @relation("sender")
+  recipientMessages Message[] @relation("recipient")
 }
 
 model Photo {
@@ -72,4 +74,17 @@ model Like {
   targetMember Member @relation("target", fields: [targetUserId], references: [userId], onDelete: Cascade)
 
   @@id([sourceUserId, targetUserId])
+}
+
+model Message {
+  id               String    @id @default(cuid())
+  text             String
+  created          DateTime  @default(now())
+  senderId         String?
+  recipientId      String?
+  sender           Member?    @relation("sender", fields: [senderId], references: [userId], onDelete: SetNull)
+  recipient        Member?    @relation("recipient", fields: [recipientId], references: [userId], onDelete: SetNull)
+  dateRead         DateTime?
+  senderDeleted    Boolean   @default(false)
+  recipientDeleted Boolean   @default(false)
 }
