@@ -3,13 +3,14 @@
 import { Photo } from '@prisma/client'
 import { CldImage } from 'next-cloudinary';
 import React from 'react'
-import {Button, Image} from '@nextui-org/react';
+import { Button, Image, useDisclosure } from '@nextui-org/react';
 import clsx from 'clsx';
 import { useRole } from '@/hooks/useRole';
-import {ImCheckmark, ImCross} from 'react-icons/im';
+import { ImCheckmark, ImCross } from 'react-icons/im';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
 import { approvePhoto, rejectPhoto } from '@/app/actions/adminActions';
+import AppModal from './AppModal';
 
 type Props = {
     photo: Photo | null;
@@ -18,6 +19,7 @@ type Props = {
 export default function MemberImage({ photo }: Props) {
     const role = useRole();
     const router = useRouter();
+    const { isOpen, onOpen, onClose } = useDisclosure();
 
     if (!photo) return null;
 
@@ -40,7 +42,7 @@ export default function MemberImage({ photo }: Props) {
     }
 
     return (
-        <div>
+        <div className='cursor-pointer' onClick={onOpen}>
             {photo?.publicId ? (
                 <CldImage
                     alt='Image of member'
@@ -79,6 +81,34 @@ export default function MemberImage({ photo }: Props) {
                     </Button>
                 </div>
             )}
+            <AppModal
+                imageModal={true}
+                isOpen={isOpen}
+                onClose={onClose}
+                body={
+                    <>
+                        {photo?.publicId ? (
+                            <CldImage
+                                alt='Image of member'
+                                src={photo.publicId}
+                                width={750}
+                                height={750}
+                                className={clsx('rounded-2xl', {
+                                    'opacity-40': !photo.isApproved && role !== 'ADMIN'
+                                })}
+                                priority
+                            />
+                        ) : (
+                            <Image
+                                width={750}
+                                height={750}
+                                src={photo?.url || '/images/user.png'}
+                                alt='Image of user'
+                            />
+                        )}
+                    </>
+                }
+            />
         </div>
     )
 }
