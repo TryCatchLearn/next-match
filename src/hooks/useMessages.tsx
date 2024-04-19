@@ -51,7 +51,7 @@ export const useMessages = (initialMessages: MessageDto[], nextCursor?: string) 
         setDeleting({id: message.id, loading: true});
         await deleteMessage(message.id, isOutbox);
         remove(message.id);
-        if (!message.dateRead) updateUnreadCount(-1);
+        if (!message.dateRead && !isOutbox) updateUnreadCount(-1);
         setDeleting({id: '', loading: false});
     }, [isOutbox, remove, updateUnreadCount])
 
