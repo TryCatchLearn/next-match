@@ -30,7 +30,6 @@ export default function ChatForm() {
             handleFormServerErrors(result, setError)
         } else {
             reset();
-            router.refresh();
             setTimeout(() => setFocus('text'), 50);
         }
     }
