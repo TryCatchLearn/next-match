@@ -27,7 +27,7 @@ export default function UserMenu({user}: Props) {
         <Dropdown>
             <Dropdown.Trigger>
                 <Avatar>
-                    <Avatar.Image alt={user.name} src="https://img.heroui.chat/image/avatar?w=400&h=400&u=3" />
+                    <Avatar.Image alt={user.name} src={user.image || '/images/user.png'} />
                     <Avatar.Fallback>{user.name.charAt(0)}</Avatar.Fallback>
                 </Avatar>
             </Dropdown.Trigger>
