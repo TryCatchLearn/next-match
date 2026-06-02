@@ -1,4 +1,4 @@
-import { calculateAge } from "@/lib/util";
+import { calculateAge, transformImageUrl } from "@/lib/util";
 import { getMemberByUserId } from "@/server/actions/members";
 import { buttonVariants, Card, Separator } from "@heroui/react";
 import Image from "next/image";
@@ -7,11 +7,20 @@ import { notFound } from "next/navigation";
 import { ReactNode } from "react";
 import MemberNav from "./MemberNav";
 import SectionTitle from "./SectionTitle";
+import { getCurrentUser } from "@/lib/auth";
+
+export const sections = [
+    { name: 'Profile', path: '', segment: null },
+    { name: 'Photos', path: '/photos', segment: 'photos' },
+    { name: 'Chat', path: '/chat', segment: 'chat' },
+]
 
 export default async function Layout({ children, params }:
     { children: ReactNode, params: Promise<{ userId: string }> }) {
     const { userId } = await params;
     const member = await getMemberByUserId(userId);
+    const currentUser = await getCurrentUser();
+    const isCurrentUser = currentUser?.id === userId;
 
     if (!member) return notFound();
 
@@ -25,7 +34,7 @@ export default async function Layout({ children, params }:
                         height={500}
                         loading="eager"
                         sizes="(max-width: 768px) 100vw, 33vw"
-                        src={member?.image || '/images/user.png'}
+                        src={transformImageUrl(member?.image) || '/images/user.png'}
                         className="aspect-square object-cover relative rounded-full p-6"
                     />
                     <Card.Content>
@@ -39,7 +48,10 @@ export default async function Layout({ children, params }:
                         </div>
 
                         <Separator />
-                        <MemberNav userId={member.userId} />
+                        <MemberNav 
+                            userId={member.userId} 
+                            sections={isCurrentUser ? sections.filter(x => x.segment !== 'chat') : sections}    
+                        />
                     </Card.Content>
                     <Card.Footer className="w-full">
                         <Link href='/members' className={buttonVariants({ variant: 'primary', className: 'w-full' })}>
@@ -51,7 +63,7 @@ export default async function Layout({ children, params }:
             <div className="col-span-9">
                 <Card className="w-full mt-6 h-[80vh]">
                     <Card.Header>
-                        <SectionTitle />
+                        <SectionTitle isOwner={isCurrentUser} sections={sections} />
                     </Card.Header>
                     <Separator />
                     <Card.Content>
