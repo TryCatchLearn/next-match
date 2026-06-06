@@ -1,5 +1,13 @@
-export default function MessagesPage() {
+import { getMessagesByContainer } from "@/server/actions/messages";
+import MessageTable from "./MessageTable";
+
+export default async function MessagesPage(props: PageProps<"/messages">) {
+  const {container} = await props.searchParams;
+  const containerValue = (container as string) ?? 'inbox';
+
+  const messages = await getMessagesByContainer(container as string);
+
   return (
-    <div>MessagesPage</div>
+    <MessageTable messages={messages ?? []} container={containerValue} />
   )
 }
