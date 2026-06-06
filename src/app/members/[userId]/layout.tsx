@@ -66,7 +66,7 @@ export default async function Layout({ children, params }:
                         <SectionTitle isOwner={isCurrentUser} sections={sections} />
                     </Card.Header>
                     <Separator />
-                    <Card.Content>
+                    <Card.Content className="overflow-y-auto">
                         {children}
                     </Card.Content>
                 </Card>
