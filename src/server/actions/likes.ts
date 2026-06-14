@@ -2,6 +2,7 @@
 
 import { requireAuthUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { pusherServer } from "@/lib/pusher";
 import { revalidatePath } from "next/cache";
 
 export async function toggleLikeMember(targetUserId: string, isLiked?: boolean) {
@@ -18,12 +19,27 @@ export async function toggleLikeMember(targetUserId: string, isLiked?: boolean) 
                 }
             })
         } else {
-            await prisma.like.create({
+            const like = await prisma.like.create({
                 data: {
                     sourceUserId: user.id,
                     targetUserId
+                },
+                select: {
+                    sourceMember: {
+                        select: {
+                            name: true,
+                            image: true,
+                            userId: true
+                        }
+                    }
                 }
-            })
+            });
+
+            pusherServer.trigger(`private-${targetUserId}`, 'like:new', {
+                name: like.sourceMember.name,
+                image: like.sourceMember.image,
+                userId: like.sourceMember.userId
+            });
         }
         revalidatePath('/members');
         revalidatePath(`/members/${targetUserId}`);

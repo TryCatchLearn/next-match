@@ -1,5 +1,6 @@
 'use client';
 
+import { useMessageStore } from '@/lib/hooks/useMessageStore';
 import { Badge } from '@heroui/react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
@@ -13,6 +14,7 @@ export default function MessageNav() {
     ]
     const searchParams = useSearchParams();
     const active = searchParams.get('container') ?? 'inbox';
+    const unreadCount = useMessageStore(state => state.unreadCount);
 
     return (
         <div className='flex flex-col gap-5 mt-3'>
@@ -26,7 +28,7 @@ export default function MessageNav() {
                             <Icon size={24} />
                             <span>{label}</span>
                         </div>
-                        {badge && <Badge color='accent' className='translate-x-1/2'>5</Badge>}
+                        {badge && <Badge color='accent' className='translate-x-1/2'>{unreadCount}</Badge>}
                     </Link>
                 </Badge.Anchor>
             ))}

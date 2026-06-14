@@ -1,7 +1,7 @@
 'use client';
 
 import { MessageDto } from "@/lib/types"
-import { transformImageUrl } from "@/lib/util";
+import { timeAgo, transformImageUrl } from "@/lib/util";
 import { Avatar } from "@heroui/react";
 import clsx from 'clsx';
 import { useEffect, useRef } from "react";
@@ -45,7 +45,7 @@ export default function MessageBox({ message, currentUserId }: Props) {
                     })}>
                         {message.dateRead && message.recipientId !== currentUserId ? (
                             <span className="text-xs text-black text-italic">
-                                (Read {message.dateRead})
+                                (Read {timeAgo(message.dateRead)})
                             </span>
                         ) : <div></div>}
                         <div className="flex">
