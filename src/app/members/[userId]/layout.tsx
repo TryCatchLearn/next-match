@@ -8,6 +8,7 @@ import { ReactNode } from "react";
 import MemberNav from "./MemberNav";
 import SectionTitle from "./SectionTitle";
 import { getCurrentUser } from "@/lib/auth";
+import PresenceDot from "@/components/PresenceDot";
 
 export const sections = [
     { name: 'Profile', path: '', segment: null },
@@ -39,18 +40,22 @@ export default async function Layout({ children, params }:
                     />
                     <Card.Content>
                         <div className="flex flex-col items-center">
-                            <div className="text-2xl">
-                                {member.name}, {calculateAge(member.dateOfBirth)}
+                            <div className="flex">
+                                <div className="text-2xl">
+                                    {member.name}, {calculateAge(member.dateOfBirth)}
+                                </div>
+                                <PresenceDot member={member} />
                             </div>
+
                             <div className="text-sm text-foreground/50">
                                 {member.city}, {member.country}
                             </div>
                         </div>
 
                         <Separator />
-                        <MemberNav 
-                            userId={member.userId} 
-                            sections={isCurrentUser ? sections.filter(x => x.segment !== 'chat') : sections}    
+                        <MemberNav
+                            userId={member.userId}
+                            sections={isCurrentUser ? sections.filter(x => x.segment !== 'chat') : sections}
                         />
                     </Card.Content>
                     <Card.Footer className="w-full">

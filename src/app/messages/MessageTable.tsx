@@ -1,28 +1,48 @@
 'use client';
 
+import PresenceAvatar from "@/components/PresenceAvatar";
+import { useMessageStore } from "@/lib/hooks/useMessageStore";
 import { MessageDto } from "@/lib/types";
-import { transformImageUrl } from "@/lib/util";
 import { deleteMessage } from "@/server/actions/messages";
-import { Avatar, Button, Table, toast } from "@heroui/react";
+import { Button, Table, toast } from "@heroui/react";
 import { useRouter } from "next/navigation";
-import { useTransition } from "react";
+import { useEffect, useRef, useTransition } from "react";
 import { AiFillDelete } from "react-icons/ai";
+import {useShallow} from 'zustand/shallow'
 
 type Props = {
-    messages: MessageDto[];
+    initialMessages: MessageDto[];
     container: string;
 }
 
-export default function MessageTable({ messages, container }: Props) {
+export default function MessageTable({ initialMessages, container }: Props) {
     const [isDeleting, startTransition] = useTransition();
     const router = useRouter();
     const isOutbox = container === 'outbox';
     const partyLabel = isOutbox ? 'Recipient' : 'Sender';
+    const initMessages = useRef(initialMessages);
 
-    const handleDelete = (messageId: string) => {
+    const {set, remove, messages, updateUnreadCount} = useMessageStore(useShallow(state => ({
+        set: state.set,
+        remove: state.remove,
+        messages: state.messages,
+        updateUnreadCount: state.updateUnreadCount
+    })));
+
+    useEffect(() => {
+        set(initMessages.current);
+        return () => set([]);
+    }, [set, container])
+
+
+    const handleDelete = (message: MessageDto) => {
         startTransition(async () => {
-            const result = await deleteMessage(messageId, isOutbox);
+            const result = await deleteMessage(message.id, isOutbox);
             if (result.status === 'error') toast.danger(result.error as string);
+            else {
+                remove(message.id);
+                if (!message.dateRead && !isOutbox) updateUnreadCount(-1);
+            }
         })
     }
 
@@ -50,12 +70,7 @@ export default function MessageTable({ messages, container }: Props) {
                                 >
                                     <Table.Cell>
                                         <div className="flex items-center gap-3">
-                                            <Avatar>
-                                                <Avatar.Image 
-                                                    alt={name}
-                                                    src={transformImageUrl(image) || '/images/user.png'}
-                                                />
-                                            </Avatar>
+                                            <PresenceAvatar src={image} userId={partyId} />
                                             <span>{name}</span>
                                         </div>
                                     </Table.Cell>
@@ -72,7 +87,7 @@ export default function MessageTable({ messages, container }: Props) {
                                                 variant="danger-soft"
                                                 aria-label="Delete message"
                                                 isPending={isDeleting}
-                                                onClick={() => handleDelete(message.id)}
+                                                onClick={() => handleDelete(message)}
                                             >
                                                 <AiFillDelete size={18} />
                                             </Button>
