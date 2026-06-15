@@ -1,4 +1,4 @@
-import { differenceInYears, format } from "date-fns";
+import { differenceInYears, format, formatDistanceToNow } from "date-fns";
 import { ActionResult } from "./types";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/client";
 
@@ -8,6 +8,10 @@ export function calculateAge(dob: string | Date) {
 
 export function formatShortDateTime(date: Date) {
     return format(date, 'dd MMM yy h:mm:a')
+}
+
+export function timeAgo(date: string) {
+    return formatDistanceToNow(new Date(date), {addSuffix: true})
 }
 
 export function transformImageUrl(imageUrl?: string | null) {
@@ -28,4 +32,8 @@ export function handlePrismaError<T>(error: unknown): ActionResult<T> {
     } else {
         return { status: 'error', error: 'Something went wrong' }
     }
+}
+
+export function createChatId(a: string, b: string) {
+    return a > b ? `private-${b}-${a}` : `private-${a}-${b}`
 }

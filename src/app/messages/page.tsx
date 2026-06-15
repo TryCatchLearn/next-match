@@ -8,6 +8,6 @@ export default async function MessagesPage(props: PageProps<"/messages">) {
   const messages = await getMessagesByContainer(container as string);
 
   return (
-    <MessageTable messages={messages ?? []} container={containerValue} />
+    <MessageTable key={containerValue} initialMessages={messages ?? []} container={containerValue} />
   )
 }
