@@ -22,6 +22,7 @@ export default function MemberCard({ member, likeIds }: Props) {
                     width={500}
                     height={500}
                     loading="eager"
+                    unoptimized
                     sizes="(max-width: 768px) 100vw, 33vw"
                     src={member?.image || '/images/user.png'}
                     className="aspect-square object-cover relative"

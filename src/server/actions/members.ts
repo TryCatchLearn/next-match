@@ -1,30 +1,59 @@
 'use server';
 
-import { getCurrentUser, requireAuthUser } from "@/lib/auth";
+import { requireAuthUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { profileEditSchema, ProfileEditSchema } from "@/lib/schemas/profileEditSchema";
-import { ActionResult } from "@/lib/types";
+import { ActionResult, PaginatedResponse, UserFilters } from "@/lib/types";
 import { revalidatePath } from "next/cache";
 import { cache } from "react";
 import { Member, Photo } from "../../../generated/prisma/client";
 import { cloudinary } from "@/lib/cloudinary";
+import { addYears } from "date-fns";
 
-export async function getMembers() {
-    const currentUser = await getCurrentUser();
-    if (!currentUser) return null;
+export async function getMembers(params: UserFilters): Promise<PaginatedResponse<Member>> {
+    const currentUser = await requireAuthUser();
+
+    const ageRange = params.ageRange?.toString()?.split(',') || [18, 100];
+    const currentDate = new Date();
+    const minDob = addYears(currentDate, -ageRange[1] - 1);
+    const maxDob = addYears(currentDate, -ageRange[0]);
+    const orderBySelector = params?.orderBy || 'updated';
+    const selectedGender = params.gender?.toString()?.split(',') || ['male', 'female'];
+    const pageNumber = Number(params?.page) || 1;
+    const pageSize = Number(params?.pageSize) || 12;
+    const withPhoto = params.withPhoto === undefined ? true : String(params.withPhoto) === 'true'
+
+    const where = {
+        AND: [
+            { dateOfBirth: { gte: minDob, lte: maxDob } },
+            { gender: { in: selectedGender } },
+            ...(withPhoto === true ? [{image: {not: null}}] : [])
+        ],
+        NOT: { userId: currentUser.id }
+    }
 
     try {
-        return prisma.member.findMany({
-            where: {NOT: {userId: currentUser.id}}
-        });
+        const [items, totalCount] = await Promise.all([
+            prisma.member.findMany({
+                where,
+                orderBy: { [orderBySelector]: 'desc' },
+                skip: (pageNumber - 1) * pageSize,
+                take: pageSize
+            }),
+            prisma.member.count({where})
+        ]);
+
+        return {items, totalCount}
+
     } catch (error) {
         console.log(error);
+        return {items: [], totalCount: 0}
     }
 }
 
 export const getMemberByUserId = cache((userId: string) => {
     try {
-        return prisma.member.findUnique({where: {userId}})
+        return prisma.member.findUnique({ where: { userId } })
     } catch (error) {
         console.log(error);
     }
@@ -36,19 +65,19 @@ export async function updateProfile(data: ProfileEditSchema): Promise<ActionResu
 
         const validated = profileEditSchema.safeParse(data);
 
-        if (!validated.success) return {status: 'error', error: validated.error.issues}
+        if (!validated.success) return { status: 'error', error: validated.error.issues }
 
-        const {name, description, city, country} = validated.data;
+        const { name, description, city, country } = validated.data;
 
         const member = await prisma.member.update({
-            where: {userId: user.id},
+            where: { userId: user.id },
             data: {
                 name,
                 description,
                 city,
                 country,
                 user: {
-                    update: {name: data.name}
+                    update: { name: data.name }
                 }
             }
         });
@@ -56,17 +85,17 @@ export async function updateProfile(data: ProfileEditSchema): Promise<ActionResu
         revalidatePath('/members');
         revalidatePath(`/members/${member.userId}`);
 
-        return {status: 'success', data: member}
+        return { status: 'success', data: member }
     } catch (error) {
-        if (error instanceof Error) return {status: 'error', error: error.message}
-        else return {status: 'error', error: 'Something went wrong!'}
+        if (error instanceof Error) return { status: 'error', error: error.message }
+        else return { status: 'error', error: 'Something went wrong!' }
     }
 }
 
 export async function getMemberPhotosByUserId(userId: string) {
     const member = await prisma.member.findUnique({
-        where: {userId},
-        select: {photos: true}
+        where: { userId },
+        select: { photos: true }
     });
 
     return member?.photos;
@@ -77,10 +106,10 @@ export async function addImage(url: string, publicId: string) {
         const user = await requireAuthUser();
 
         const member = await prisma.member.update({
-            where: {userId: user.id},
+            where: { userId: user.id },
             data: {
                 photos: {
-                    create: [{url, publicId}]
+                    create: [{ url, publicId }]
                 }
             }
         });
@@ -97,7 +126,7 @@ export async function setMainImage(photo: Photo) {
         const user = await requireAuthUser();
 
         const result = await prisma.user.update({
-            where: {id: user.id},
+            where: { id: user.id },
             data: {
                 image: photo.url,
                 member: {
@@ -128,10 +157,10 @@ export async function deleteImage(photo: Photo) {
         }
 
         const result = await prisma.member.update({
-            where: {userId: user.id},
+            where: { userId: user.id },
             data: {
                 photos: {
-                    delete: {id: photo.id}
+                    delete: { id: photo.id }
                 }
             }
         });
@@ -143,4 +172,15 @@ export async function deleteImage(photo: Photo) {
         console.log(error);
         throw error;
     }
+}
+
+export async function updateLastActive() {
+    const user = await requireAuthUser();
+
+    prisma.member.update({
+        where: { userId: user.id },
+        data: { updated: new Date() }
+    }).catch(e => {
+        console.error('update last active failed: ', e)
+    })
 }

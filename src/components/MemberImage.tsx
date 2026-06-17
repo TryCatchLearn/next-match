@@ -27,6 +27,7 @@ export default function MemberImage({ photo }: Props) {
                     width={300}
                     height={300}
                     loading="eager"
+                    unoptimized
                     sizes="(max-width: 768px) 100vw, 33vw"
                     src={photo.url}
                     className="aspect-square object-cover rounded-xl relative"

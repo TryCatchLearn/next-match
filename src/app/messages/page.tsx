@@ -5,9 +5,14 @@ export default async function MessagesPage(props: PageProps<"/messages">) {
   const {container} = await props.searchParams;
   const containerValue = (container as string) ?? 'inbox';
 
-  const messages = await getMessagesByContainer(container as string);
+  const {messages, nextCursor} = await getMessagesByContainer(container as string);
 
   return (
-    <MessageTable key={containerValue} initialMessages={messages ?? []} container={containerValue} />
+    <MessageTable 
+      key={containerValue} 
+      initialMessages={messages ?? []} 
+      container={containerValue}
+      initNextCursor={nextCursor} 
+    />
   )
 }
