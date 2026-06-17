@@ -4,6 +4,23 @@ import { Prisma } from "../../../generated/prisma/client";
 type ActionResult<T> = { status: 'success', data: T }
     | { status: 'error', error: string | $ZodIssue[] }
 
+type UserFilters = {
+    ageRange: number[];
+    orderBy: string;
+    gender: string[];
+    withPhoto: boolean;
+} & PagingParams;
+
+type PagingParams = {
+    page?: number;
+    pageSize?: number;
+}
+
+type PaginatedResponse<T> = {
+    items: T[];
+    totalCount: number;
+}
+
 type MessageDto = {
     id: string;
     text: string;

@@ -107,7 +107,7 @@ export async function markMessagesAsRead(messageIds: string[], senderId: string)
     await pusherServer.trigger(createChatId(senderId, user.id), 'messages:read', messageIds)
 }
 
-export async function getMessagesByContainer(container = 'inbox') {
+export async function getMessagesByContainer(container = 'inbox', cursor?: string, limit = 2) {
     try {
         const user = await requireAuthUser();
 
@@ -117,12 +117,27 @@ export async function getMessagesByContainer(container = 'inbox') {
         }
 
         const messages = await prisma.message.findMany({
-            where: conditions,
+            where: {
+                ...conditions,
+                ...(cursor ? {created: {lte: new Date(cursor)}} : {})
+            },
             orderBy: { created: 'desc' },
-            select: messageSelect
+            select: messageSelect,
+            take: limit + 1
         });
 
-        return messages.map(message => mapMessageToMessageDto(message));
+        let nextCursor: string | undefined;
+
+        if (messages.length > limit) {
+            const nextItem = messages.pop();
+            nextCursor = nextItem?.created.toISOString();
+        } else {
+            nextCursor = undefined;
+        }
+
+        const messageToReturn = messages.map(message => mapMessageToMessageDto(message));
+
+        return {messages: messageToReturn, nextCursor}
     } catch (error) {
         console.log(error);
         throw error;
