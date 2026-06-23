@@ -1,27 +1,42 @@
 'use client';
 
 import { authClient } from "@/lib/auth-client";
-import { registerSchema, RegisterSchema } from "@/lib/schemas/registerSchema";
-import { Button, Card, CardHeader, FieldError, Input, TextField, toast } from "@heroui/react";
+import { profileSchema, ProfileSchema, registerSchema, RegisterSchema } from "@/lib/schemas/registerSchema";
+import { Button, Card, CardHeader, toast } from "@heroui/react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { GiPadlock } from "react-icons/gi";
+import UserForm from "./UserForm";
+import ProfileForm from "./ProfileForm";
 
 export default function RegisterForm() {
     const router = useRouter();
-    const { register, handleSubmit, formState: {errors, isSubmitting} } = useForm<RegisterSchema>({
-        resolver: zodResolver(registerSchema)
+    const [activeStep, setActiveStep] = useState(0);
+    const isLastStep = activeStep === 1;
+
+    const userForm = useForm<RegisterSchema>({
+        resolver: zodResolver(registerSchema),
+        mode: 'onTouched'
     });
 
-    const onSubmit = async (data: RegisterSchema) => {
-        await authClient.signUp.email({
-            email: data.email,
-            password: data.password,
-            name: data.name
-        }, {
+    const profileForm = useForm<ProfileSchema>({
+        resolver: zodResolver(profileSchema),
+        mode: 'onTouched'
+    });
+
+    const onNext = () => setActiveStep(1);
+    const onBack = () => setActiveStep(0);
+
+    const onSubmit = async () => {
+        const userData = userForm.getValues();
+        const profileData = profileForm.getValues();
+        const data = { ...userData, ...profileData, profileComplete: true };
+        await authClient.signUp.email(data, {
             onSuccess: () => {
-                router.push('/members')
+                toast.success('Registration successful! Please check your email to verify your account')
+                router.push('/');
             },
             onError: (ctx) => {
                 toast.danger(ctx.error.message)
@@ -41,45 +56,35 @@ export default function RegisterForm() {
                 </div>
             </CardHeader>
 
-            <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4 px-6 py-4">
-                <TextField defaultValue="" aria-label="name" isInvalid={!!errors.name}>
-                    <Input
-                        placeholder="Enter your name"
-                        {...register('name')}
-                    />
-                    <FieldError>{errors.name?.message}</FieldError>
-                </TextField>
+            <form onSubmit={isLastStep
+                ? profileForm.handleSubmit(onSubmit)
+                : userForm.handleSubmit(onNext)} className="flex flex-col gap-4 px-6 py-4"
+            >
+                {activeStep === 0
+                    ? <UserForm control={userForm.control} />
+                    : <ProfileForm control={profileForm.control} 
+                        setValue={profileForm.setValue} />
+                }
 
-                <TextField defaultValue="" aria-label="email" isInvalid={!!errors.email}>
-                    <Input
-                        placeholder="Enter your email"
-                        {...register('email')}
-                    />
-                    <FieldError>{errors.email?.message}</FieldError>
-                </TextField>
+                <div className="flex flex-row gap-2">
+                    {activeStep > 0 && (
+                        <Button variant="secondary" onClick={onBack}
+                            type="button" className='flex-1'>
+                            Back
+                        </Button>
+                    )}
 
-                <TextField defaultValue="" aria-label="password" isInvalid={!!errors.password}>
-                    <Input
-                        type="password"
-                        placeholder="Enter your password"
-                        {...register('password')}
-                    />
-                    <FieldError>{errors.password?.message}</FieldError>
-                </TextField>
-
-                <TextField defaultValue="" aria-label="confirm password" 
-                    isInvalid={!!errors.confirmPassword}>
-                    <Input
-                        type="password"
-                        placeholder="Confirm your password"
-                        {...register('confirmPassword')}
-                    />
-                    <FieldError>{errors.confirmPassword?.message}</FieldError>
-                </TextField>
-
-                <Button isPending={isSubmitting} type="submit" className="w-full">
-                    Register
-                </Button>
+                    <Button isPending={isLastStep 
+                        ? profileForm.formState.isSubmitting 
+                        : userForm.formState.isSubmitting} 
+                        type="submit" 
+                        className="flex-1"
+                        variant="primary"
+    
+                    >
+                        {isLastStep ? 'Submit' : 'Continue'}
+                    </Button>
+                </div>
             </form>
         </Card>
     )
