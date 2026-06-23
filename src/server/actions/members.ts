@@ -9,6 +9,8 @@ import { cache } from "react";
 import { Member, Photo } from "../../../generated/prisma/client";
 import { cloudinary } from "@/lib/cloudinary";
 import { addYears } from "date-fns";
+import { User } from "better-auth";
+import { ProfileSchema } from "@/lib/schemas/registerSchema";
 
 export async function getMembers(params: UserFilters): Promise<PaginatedResponse<Member>> {
     const currentUser = await requireAuthUser();
@@ -177,10 +179,39 @@ export async function deleteImage(photo: Photo) {
 export async function updateLastActive() {
     const user = await requireAuthUser();
 
+    if (!user.profileComplete) return null;
+
     prisma.member.update({
         where: { userId: user.id },
         data: { updated: new Date() }
     }).catch(e => {
         console.error('update last active failed: ', e)
     })
+}
+
+export async function createMemberProfile(user: User, data: ProfileSchema) {
+    try {
+        const [member] = await prisma.$transaction([
+            prisma.member.create({
+                data: {
+                    userId: user.id,
+                    name: user.name,
+                    gender: data.gender,
+                    dateOfBirth: new Date(data.dateOfBirth),
+                    description: data.description,
+                    city: data.city,
+                    country: data.country
+                }
+            }),
+            prisma.user.update({
+                where: {id: user.id},
+                data: {profileComplete: true}
+            })
+        ]);
+
+        return {status: 'success', data: member};
+    } catch (error) {
+        console.log(error);
+        return {status: 'error', error: 'Failed to create member profile'}
+    }
 }

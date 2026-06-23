@@ -34,6 +34,7 @@ export default async function Layout({ children, params }:
                         width={500}
                         height={500}
                         loading="eager"
+                        unoptimized
                         sizes="(max-width: 768px) 100vw, 33vw"
                         src={transformImageUrl(member?.image) || '/images/user.png'}
                         className="aspect-square object-cover relative rounded-full p-6"
