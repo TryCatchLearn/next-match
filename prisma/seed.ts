@@ -1,3 +1,5 @@
+process.env.SEEDING = 'true';
+
 import { auth } from "@/lib/auth";
 import { membersData } from "./membersData";
 import { prisma } from "@/lib/prisma";

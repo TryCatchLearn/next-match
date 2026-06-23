@@ -19,6 +19,7 @@ export default function UserMenu({ user }: Props) {
         await authClient.signOut({
             fetchOptions: {
                 onSuccess: () => {
+                    document.cookie = `memberFilters=; path=/; max-age=0`;
                     router.push('/');
                     router.refresh();
                 }

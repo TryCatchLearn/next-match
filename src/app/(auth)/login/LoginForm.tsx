@@ -2,15 +2,17 @@
 
 import { authClient } from "@/lib/auth-client";
 import { LoginSchema, loginSchema } from "@/lib/schemas/loginSchema";
-import { Button, Card, CardHeader, FieldError, Input, TextField, toast } from "@heroui/react";
+import { Button, Card, CardHeader, FieldError, Input, Separator, TextField, toast } from "@heroui/react";
 import { zodResolver } from "@hookform/resolvers/zod";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { GiPadlock } from "react-icons/gi";
+import SocialLogin from "./SocialLogin";
 
 export default function LoginForm() {
     const router = useRouter();
-    const { register, handleSubmit, formState: {errors, isSubmitting} } = useForm<LoginSchema>({
+    const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<LoginSchema>({
         resolver: zodResolver(loginSchema)
     });
 
@@ -24,7 +26,12 @@ export default function LoginForm() {
                 router.refresh();
             },
             onError: (ctx) => {
-                toast.danger(ctx.error.message)
+                if (ctx.error.status === 403) {
+                    console.log(ctx.error);
+                    toast.danger('You need to verify your email.  Please check your email for link')
+                } else {
+                    toast.danger(ctx.error.message)
+                }
             }
         })
     }
@@ -61,6 +68,12 @@ export default function LoginForm() {
                 <Button isPending={isSubmitting} type="submit" className="w-full">
                     Sign in
                 </Button>
+                <Link href='/forgot-password' className="text-sm text-accent text-center hover:underline">
+                    Forgot password?
+                </Link>
+
+                <Separator />
+                <SocialLogin />
             </form>
         </Card>
     )
