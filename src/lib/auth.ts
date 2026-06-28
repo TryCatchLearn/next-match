@@ -4,6 +4,7 @@ import { headers } from "next/headers";
 import { nextCookies } from "better-auth/next-js";
 import { prisma } from "./prisma";
 import { getEmailHtml, sendEmail } from "./mail";
+import { admin } from "better-auth/plugins"
 
 export const auth = betterAuth({
     database: prismaAdapter(prisma, {
@@ -95,7 +96,7 @@ export const auth = betterAuth({
             }
         }
     },
-    plugins: [nextCookies()]
+    plugins: [admin(), nextCookies()]
 });
 
 export async function getCurrentUser() {
@@ -112,6 +113,17 @@ export async function requireAuthUser() {
     });
 
     if (!session) throw new Error("Unauthorized");
+
+    return session.user;
+}
+
+export async function requireAdminUser() {
+    const session = await auth.api.getSession({
+        headers: await headers()
+    });
+
+    if (!session) throw new Error("Unauthorized");
+    if (session.user.role !== 'admin') throw new Error('Forbidden');
 
     return session.user;
 }
