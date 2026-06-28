@@ -1,6 +1,6 @@
 'use server';
 
-import { requireAuthUser } from "@/lib/auth";
+import { getCurrentUser, requireAuthUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { profileEditSchema, ProfileEditSchema } from "@/lib/schemas/profileEditSchema";
 import { ActionResult, PaginatedResponse, UserFilters } from "@/lib/types";
@@ -95,9 +95,14 @@ export async function updateProfile(data: ProfileEditSchema): Promise<ActionResu
 }
 
 export async function getMemberPhotosByUserId(userId: string) {
+    const currentUser = await getCurrentUser();
+    const isOwner = currentUser?.id === userId;
+
     const member = await prisma.member.findUnique({
         where: { userId },
-        select: { photos: true }
+        select: { photos: {
+            where: isOwner ? {} : {status: 'approved'}
+        } }
     });
 
     return member?.photos;
@@ -126,6 +131,10 @@ export async function addImage(url: string, publicId: string) {
 export async function setMainImage(photo: Photo) {
     try {
         const user = await requireAuthUser();
+
+        if (photo.status !== 'approved') {
+            throw new Error('Only approved photos can be used as main');
+        }
 
         const result = await prisma.user.update({
             where: { id: user.id },

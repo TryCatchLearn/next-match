@@ -20,6 +20,11 @@ model User {
   accounts        Account[]
   member          Member?
 
+  role       String?
+  banned     Boolean?  @default(false)
+  banReason  String?
+  banExpires DateTime?
+
   @@unique([email])
   @@map("user")
 }
@@ -34,6 +39,8 @@ model Session {
   userAgent String?
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  impersonatedBy String?
 
   @@unique([token])
   @@index([userId])
@@ -96,6 +103,7 @@ model Photo {
   id       String  @id @default(cuid())
   url      String
   publicId String?
+  status   String  @default("pending")
 
   memberId String
   member   Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
