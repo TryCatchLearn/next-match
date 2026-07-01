@@ -14,7 +14,7 @@ export default async function PhotosPage(props: PageProps<"/members/[userId]/pho
     <div className="grid grid-cols-5 gap-3 p-5">
       {photos?.map(photo => (
         <div key={photo.id} className="relative">
-          <MemberImage photo={photo} />
+          <MemberImage photo={photo} enableLightbox />
           {isOwner && photo.status !== 'approved' && (
             <Chip
               variant="primary"
