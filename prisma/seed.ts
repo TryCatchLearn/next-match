@@ -61,6 +61,11 @@ async function seedUsers() {
 }
 
 async function main() {
+    const existingUsers = await prisma.user.count();
+    if (existingUsers > 0) {
+        console.log("Database already contains users. Skipping");
+        return;
+    }
     await seedUsers();
     await seedAdmin();
 }

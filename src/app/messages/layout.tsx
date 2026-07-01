@@ -3,6 +3,7 @@ import { buttonVariants } from "@heroui/styles";
 import Link from "next/link";
 import SectionTitle from "./SectionTitle";
 import MessageNav from "./MessageNav";
+import { Suspense } from "react";
 
 export default function Layout(props: LayoutProps<"/messages">) {
     return (
@@ -10,7 +11,10 @@ export default function Layout(props: LayoutProps<"/messages">) {
             <div className="col-span-3">
                 <Card className="w-full mt-6 items-center h-[80vh]">
                     <Card.Content>
-                        <MessageNav />
+                        <Suspense>
+                            <MessageNav />
+                        </Suspense>
+
                     </Card.Content>
                     <Card.Footer className="w-full">
                         <Link href='/members' className={buttonVariants({ variant: 'primary', className: 'w-full' })}>
@@ -22,7 +26,10 @@ export default function Layout(props: LayoutProps<"/messages">) {
             <div className="col-span-9">
                 <Card className="w-full mt-6 h-[80vh]">
                     <Card.Header>
-                        <SectionTitle />
+                        <Suspense>
+                            <SectionTitle />
+                        </Suspense>
+
                     </Card.Header>
                     <Separator />
                     <Card.Content className="overflow-y-auto">

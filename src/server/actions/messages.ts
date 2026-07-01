@@ -107,7 +107,7 @@ export async function markMessagesAsRead(messageIds: string[], senderId: string)
     await pusherServer.trigger(createChatId(senderId, user.id), 'messages:read', messageIds)
 }
 
-export async function getMessagesByContainer(container = 'inbox', cursor?: string, limit = 2) {
+export async function getMessagesByContainer(container = 'inbox', cursor?: string, limit = 10) {
     try {
         const user = await requireAuthUser();
 

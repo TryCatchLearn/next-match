@@ -97,6 +97,10 @@ model Member {
   targetLikes       Like[]    @relation("target")
   senderMessages    Message[] @relation("sender")
   recipientMessages Message[] @relation("recipient")
+
+  @@index([gender, dateOfBirth])
+  @@index([updated])
+  @@index([created])
 }
 
 model Photo {
@@ -107,6 +111,8 @@ model Photo {
 
   memberId String
   member   Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  @@index([memberId])
 }
 
 model Like {
@@ -117,6 +123,7 @@ model Like {
   targetMember Member @relation("target", fields: [targetUserId], references: [userId], onDelete: Cascade)
 
   @@id([sourceUserId, targetUserId])
+  @@index([targetUserId])
 }
 
 model Message {
@@ -130,4 +137,8 @@ model Message {
   dateRead         DateTime?
   senderDeleted    Boolean   @default(false)
   recipientDeleted Boolean   @default(false)
+
+  @@index([senderId, created])
+  @@index([recipientId, created])
+  @@index([recipientId, dateRead])
 }
