@@ -11,7 +11,7 @@ export function getPusherClient(): PusherClient {
                 endpoint: '/api/pusher-auth',
                 transport: 'ajax'
             },
-            cluster: 'ap1'
+            cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER!
         })
     }
 
