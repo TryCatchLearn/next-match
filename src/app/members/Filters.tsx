@@ -3,7 +3,6 @@
 import { useFilterParams } from "@/lib/hooks/useFilterParams";
 import { UserFilters } from "@/lib/types";
 import { Button, Label, ListBox, Select, Slider, Spinner, Switch } from "@heroui/react";
-import { useEffect } from "react";
 import { FaFemale, FaMale } from "react-icons/fa";
 
 const defaultFilters: UserFilters = {
@@ -18,11 +17,7 @@ type Props = {
 }
 
 export default function Filters({totalCount}: Props) {
-    const {searchParams, commit, isPending, restore} = useFilterParams();
-
-    useEffect(() => {
-        if (!searchParams.toString()) restore();
-    }, [restore, searchParams]);
+    const {searchParams, commit, isPending} = useFilterParams();
 
     const ageRangeParams = searchParams.get('ageRange');
     const genderParam = searchParams.get('gender');
